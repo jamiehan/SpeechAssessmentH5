@@ -29,9 +29,9 @@
 			</view>
 			<view class="padding flex btn-wrapper-fixed">
 				<!-- <button class="cu-btn bg-blue"></button> -->
-				<view class="bg-blue btn-left-round">换一个</view>
+				<view class="bg-blue btn-left-round" @tap="recplay">换一个</view>
 				<view class="flex-sub text-center">
-					<view class="text-sl" @longpress="recStart" data-target="Modal">
+					<view class="text-sl" tap="recStart">
 						<text class="cuIcon-voice text-white round bg-blue"></text>
 					</view>
 					<view class="action padding-top-xs xs">长按跟读</view>
@@ -43,6 +43,7 @@
 					<view class="padding-top-xs">点击回放</view>
 				</view>
 			</view>
+            <!-- <audio ref="audioPlayer" style="text-align: left" controls></audio> -->
 		</form>
 		<view class="cu-modal" :class="modalName=='Modal'?'show':''">
 			<view class="cu-dialog">
@@ -53,7 +54,7 @@
 					</view>
 				</view>
 				<view class="padding-xl">
-					Modal 内容。
+					{{msg}}
 				</view>
 			</view>
 		</view>
@@ -66,7 +67,7 @@
 	import 'recorder-core/src/engine/mp3-engine'
 	import 'recorder-core/src/extensions/waveview'
 	Recorder.TrafficImgUrl = ''
-	
+
 	export default {
 		data() {
 			return {
@@ -79,12 +80,25 @@
 				duration: 0,
 				powerLevel: 0,
 				recOpenDialogShow: 0,
-				dialogInt: null
+				dialogInt: null,
+				logs: [],
+				blob: null,
+				current: {
+					poster: 'https://vkceyugu.cdn.bspapp.com/VKCEYUGU-uni-app-doc/7fbf26a0-4f4a-11eb-b680-7980c8a877b8.png',
+					name: '致爱丽丝',
+					author: '暂无',
+					src: 'https://vkceyugu.cdn.bspapp.com/VKCEYUGU-hello-uniapp/2cc220e0-c27a-11ea-9dfb-6da8e309e0d8.mp3',
+				},
+				audioAction: {
+					method: 'play'
+				},
+				showAudio: false,
+				msg: ''
 			}
 		},
 		methods: {
-			showModal(e) {
-				this.modalName = e.currentTarget.dataset.target
+			showModal(modal) {
+				this.modalName = modal
 			},
 			hideModal(e) {
 				this.modalName = null
@@ -100,19 +114,23 @@
 						self.powerLevel = powerLevel;
 						// self.wave.input(buffers[buffers.length - 1], powerLevel, sampleRate);
 					},
-				
+
 				});
 				self.dialogInt = setTimeout(function() { //定时8秒后打开弹窗，用于监测浏览器没有发起权限请求的情况
 					// self.showDialog();
 				}, 8000);
 				rec.open(function() {
+					self.msg = 'open recorder success'
+					self.showModal('Modal')
 					// self.dialogCancel();
 					// self.reclog("已打开:" + self.type + " " + self.sampleRate + "hz " + self.bitRate + "kbps", 2);
-			
+
 					// self.wave = Recorder.WaveView({
 					// 	elem: ".ctrlProcessWave"
 					// });
 				}, function(msg, isUserNotAllow) {
+					this.msg = msg
+					self.showModal('Modal')
 					// self.dialogCancel();
 					// self.reclog((isUserNotAllow ? "UserNotAllow，" : "") + "打开失败：" + msg, 1);
 				});
@@ -123,6 +141,8 @@
 			},
 			recStart: function() {
 				if (!this.rec) {
+					this.msg = 'can not open recorder'
+					this.showModal('Modal')
 					console.log('未打开录音')
 					// this.reclog("未打开录音", 1);
 					return;
@@ -130,7 +150,9 @@
 				this.rec.start();
 				var set = this.rec.set;
 				console.log('录制中')
-				// this.reclog("录制中：" + set.type + " " + set.sampleRate + "hz " + set.bitRate + "kbps");
+				this.msg = 'recording'
+				self.showModal('Modal')
+				this.reclog("录制中：" + set.type + " " + set.sampleRate + "hz " + set.bitRate + "kbps");
 			},
 			recStop: function() {
 				var self = this;
@@ -138,23 +160,60 @@
 				self.rec = null;
 				if (!rec) {
 					console.log('未打开录音')
-					// This.reclog("未打开录音", 1);
+					// self.reclog("未打开录音", 1);
 					return;
 				}
-				rec.stop(function(blob, duration, res) {
-					// This.reclog("已录制:", "", {
-					// 	blob: blob,
-					// 	duration: duration,
-					// 	rec: rec
-					// });
+				rec.stop(function(blob, duration) {
+					self.reclog("已录制:", "", {
+						blob: blob,
+						duration: duration,
+						rec: rec
+					});
+					self.blob = blob
 					console.log(blob)
+					self.showModal('Modal')
 				}, function(s) {
-					// This.reclog("结束出错：" + s, 1);
+					this.msg = 'error:' + s
+					self.reclog("结束出错：" + s, 1);
+					self.showModal('Modal')
 				}, true); //自动close
+			},
+			reclog: function(msg, color, res) {
+				this.logs.splice(0, 0, {
+					idx: this.logs.length,
+					msg: msg,
+					color: color,
+					res: res,
+					playMsg: "",
+					down: 0,
+					down64Val: ""
+				});
+			},
+			recplay: function() {
+				this.showAudio = true
+				var audio = this.$refs.audioPlayer
+				debugger
+				audio.onerror = function(e) {
+					console.log('play failed');
+				};
+				audio.src = (window.URL || webkitURL).createObjectURL(this.blob);
+				// audio.play();
+				// const innerAudioContext = uni.createInnerAudioContext();
+				// innerAudioContext.autoplay = true;
+				// // innerAudioContext.src = 'https://vkceyugu.cdn.bspapp.com/VKCEYUGU-hello-uniapp/2cc220e0-c27a-11ea-9dfb-6da8e309e0d8.mp3';
+				// innerAudioContext.src = (window.URL || webkitURL).createObjectURL(this.blob);
+				// console.log(innerAudioContext.src)
+				// innerAudioContext.onPlay(() => {
+				//   console.log('开始播放');
+				// });
+				// innerAudioContext.onError((res) => {
+				//   console.log(res.errMsg);
+				//   console.log(res.errCode);
+				// });
 			},
 		},
 		mounted() {
-			this.getRec()
+			// this.getRec()
 		}
 	}
 </script>

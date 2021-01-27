@@ -17,7 +17,16 @@
 	}, {
 		"path": "pages/evaluation/phonetic-symbol",
 		"style": {}
-	}],
+	}    ,{
+            "path" : "pages/exams/examing",
+            "style" :                                                                                    
+            {
+                "navigationBarTitleText": "",
+                "enablePullDownRefresh": false
+            }
+            
+        }
+    ],
 	"globalStyle": {
 		// "navigationStyle":"custom",
 		// "navigationBarTextStyle": "black",
