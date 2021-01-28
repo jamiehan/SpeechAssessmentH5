@@ -45,15 +45,6 @@
 	export default {
 		data() {
 			return {
-				rec: Recorder,
-				type: "mp3",
-				bitRate: 16,
-				sampleRate: 16000,
-				rec: 0,
-				duration: 0,
-				powerLevel: 0,
-				recOpenDialogShow: 0,
-				logs: []
 			}
 		},
 		methods: {

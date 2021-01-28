@@ -78,7 +78,12 @@
 			close() {
 				this.modalName = ''
 			},
-			confirm(){}
+			confirm(){
+				this.modalName = ''
+				uni.navigateTo({
+					url:'./examing'
+				})
+			}
 		},
 		mounted() {
 			// this.getRec()
