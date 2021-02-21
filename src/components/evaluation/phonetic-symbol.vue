@@ -33,15 +33,18 @@
       </div>
     </div>
     <div class="action-bottom">
-      <div @touchstart="touchStart" @touchend="touchEnd">
-        <van-icon name="service" size="30" color="#1989fa" />
+      <div >
+        <van-icon name="service" size="30" color="#1989fa" @touchstart="touchStart" @touchend="touchEnd"/>
         <div>长按跟读</div>
       </div>
       <div>
-        <van-icon name="play-circle" size="30" color="#1989fa" />
+        <van-icon name="play-circle" size="30" color="#1989fa" @click="replay"/>
         <div>点击回放</div>
       </div>
-      <div class="btn-next">换一个</div>
+      <div class="btn-next" @click="recStop">换一个</div>
+    </div>
+    <div class="player">
+      <audio src="" ref="audioPlayer"></audio>
     </div>
   </div>
 </template>
@@ -86,6 +89,7 @@ export default {
       showAudio: false,
       msg: "",
       wave: null,
+      duration: 0
     };
   },
   methods: {
@@ -148,7 +152,6 @@ export default {
         console.log("未打开录音");
         return;
       }
-      self.hideModal();
       // res.pause()
       rec.stop(
         function (blob, duration) {
@@ -159,6 +162,7 @@ export default {
           // });
           self.blob = blob;
           console.log(duration);
+          self.duration = duration;
         },
         function (s) {
           this.msg = "error:" + s;
@@ -173,8 +177,15 @@ export default {
       audio.onerror = function (e) {
         console.log("play failed", e);
       };
-      // audio.src = (window.URL || webkitURL).createObjectURL(this.blob);
-      // audio.play();
+      let url = window.URL
+      if(typeof window.webkitURL !== undefined){
+        url = window.webkitURL
+        // Toast.success('webkit')
+      }else{
+        url = window.URL
+      }
+      audio.src = url.createObjectURL(this.blob);
+      audio.play();
       // const innerAudioContext = uni.createInnerAudioContext();
       // innerAudioContext.autoplay = true;
       // // innerAudioContext.src = 'https://vkceyugu.cdn.bspapp.com/VKCEYUGU-hello-uniapp/2cc220e0-c27a-11ea-9dfb-6da8e309e0d8.mp3';
@@ -204,6 +215,11 @@ export default {
     },
     replay: function () {
       Toast.clear(true);
+      Toast.loading({
+        message: '录音回放',
+        duration: this.duration
+      })
+      this.recPlay()
     },
   },
   mounted() {
@@ -269,6 +285,9 @@ div {
       font-size: 32px;
     }
   }
+  // .player{
+  //   display: none;
+  // }
 }
 .action-bottom {
   position: fixed;

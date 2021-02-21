@@ -9,6 +9,8 @@
   },
   "dependencies": {
     "core-js": "^3.6.5",
+    "crypto-js": "^4.0.0",
+    "fast-xml-parser": "^3.17.4",
     "less": "^4.1.1",
     "less-loader": "^7.3.0",
     "recorder-core": "^1.1.20112600",

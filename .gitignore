@@ -2,3 +2,5 @@ node_modules
 unpackage
 package-lock.json
 .DS_Store
+dist
+*.zip
