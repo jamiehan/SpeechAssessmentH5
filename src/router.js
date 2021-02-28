@@ -40,7 +40,14 @@ const routes = [
         name: 'phoneticsymbol',
         component: () => import('./components/evaluation/phonetic-symbol'),
         meta: {
-            title: '英文单词'
+            title: '英文音标'
+        }
+    },
+    {
+        name: 'en-sentence',
+        component: () => import('./components/evaluation/en-sentence'),
+        meta: {
+            title: '英文句子'
         }
     },
 ];

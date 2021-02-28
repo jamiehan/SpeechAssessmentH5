@@ -14,15 +14,15 @@
         <div>测评音标</div>
       </div>
       <div class="card">
-        <div class="symbol">[i:]</div>
-        <van-image
+        <div class="symbol">[{{ stdSymbols[selectedIdx] }}]</div>
+        <!-- <van-image
           width="100"
           height="100"
           src="https://img01.yzcdn.cn/vant/cat.jpeg"
-        />
-        <div class="label">
+        /> -->
+        <!-- <div class="label">
           发音时舌尖抵下齿，舌前部尽量向上颚抬起，嘴唇向两旁伸开，成扁平形，注意一定要把音发足。
-        </div>
+        </div> -->
       </div>
       <div class="title">
         <div></div>
@@ -33,15 +33,26 @@
       </div>
     </div>
     <div class="action-bottom">
-      <div >
-        <van-icon name="service" size="30" color="#1989fa" @touchstart="touchStart" @touchend="touchEnd"/>
+      <div>
+        <van-icon
+          name="service"
+          size="30"
+          color="#1989fa"
+          @touchstart="touchStart" 
+          @touchend="touchEnd"
+        />
         <div>长按跟读</div>
       </div>
       <div>
-        <van-icon name="play-circle" size="30" color="#1989fa" @click="replay"/>
+        <van-icon
+          name="play-circle"
+          size="30"
+          color="#1989fa"
+          @click="replay"
+        />
         <div>点击回放</div>
       </div>
-      <div class="btn-next" @click="recStop">换一个</div>
+      <div class="btn-next" @click="changeContent">换一个</div>
     </div>
     <div class="player">
       <audio src="" ref="audioPlayer"></audio>
@@ -50,10 +61,15 @@
 </template>
 
 <script>
-import Recorder from "recorder-core";
-import "recorder-core/src/engine/wav";
-Recorder.TrafficImgUrl = "";
+import IseRecorder from "../lib/recorder";
 import { NavBar, Image as VanImage, Icon, Toast } from "vant";
+
+const iseRecorder = new IseRecorder({
+  action: "read_word",
+  language: "en_us",
+  accent: "mandarin",
+  ent: "en_vip",
+});
 
 export default {
   components: {
@@ -65,165 +81,162 @@ export default {
   data() {
     return {
       modalName: "",
-      rec: Recorder,
-      type: "wav",
-      bitRate: 16,
-      // sampleRate: 16000,
-      // duration: 0,
-      powerLevel: 0,
-      recOpenDialogShow: 0,
-      dialogInt: null,
-      logs: [],
-      blob: null,
-      current: {
-        poster:
-          "https://vkceyugu.cdn.bspapp.com/VKCEYUGU-uni-app-doc/7fbf26a0-4f4a-11eb-b680-7980c8a877b8.png",
-        name: "致爱丽丝",
-        author: "暂无",
-        src:
-          "https://vkceyugu.cdn.bspapp.com/VKCEYUGU-hello-uniapp/2cc220e0-c27a-11ea-9dfb-6da8e309e0d8.mp3",
-      },
       audioAction: {
         method: "play",
       },
       showAudio: false,
       msg: "",
-      wave: null,
-      duration: 0
+      duration: 0,
+      iseRecorder: null,
+      selectedIdx: 9,
+      stdSymbols: [
+        "ɑː",
+        "æ",
+        "ʌ",
+        "ɔː",
+        "eə",
+        "aʊ",
+        "ə",
+        "aɪ",
+        "e",
+        "ɜː",
+        "eɪ",
+        "ɪ",
+        "ɪə",
+        "iː",
+        "ɒ",
+        "əʊ",
+        "ɒɪ",
+        "ʊ",
+        "uː",
+        "ʊə",
+        "b",
+        "tʃ",
+        "d",
+        "ð",
+        "f",
+        "g",
+        "h",
+        "dʒ",
+        "k",
+        "l",
+        "m",
+        "n",
+        "ŋ",
+        "p",
+        "r",
+        "s",
+        "ʃ",
+        "t",
+        "θ",
+        "v",
+        "w",
+        "j",
+        "z",
+        "ʒ",
+        "dr",
+        "dz",
+        "tr",
+        "ts",
+      ],
+      xfSymbols: [
+        "aa",
+        "ae",
+        "ah",
+        "ao",
+        "ar",
+        "aw",
+        "ax",
+        "ay",
+        "eh",
+        "er",
+        "ey",
+        "ih",
+        "ir",
+        "iy",
+        "oo",
+        "ow",
+        "oy",
+        "uh",
+        "uw",
+        "ur",
+        "b",
+        "ch",
+        "d",
+        "dh",
+        "f",
+        "g",
+        "hh",
+        "jh",
+        "k",
+        "l",
+        "m",
+        "n",
+        "ng",
+        "p",
+        "r",
+        "s",
+        "sh",
+        "t",
+        "th",
+        "v",
+        "w",
+        "y",
+        "z",
+        "zh",
+        "dr",
+        "dz",
+        "tr",
+        "ts",
+      ],
+      result: {}
     };
   },
   methods: {
     back() {
       this.$router.go(-1);
     },
-    getRec() {
-      const self = this;
-      const rec = (this.rec = Recorder({
-        type: self.type,
-        onProcess: function (buffers, powerLevel, duration, sampleRate) {
-          buffers, duration, sampleRate;
-          if (powerLevel > 0) {
-            console.log(powerLevel);
-          }
-          // self.wave.input(buffers[buffers.length - 1], powerLevel, sampleRate);
-        },
-      }));
-      self.dialogInt = setTimeout(function () {
-        //定时8秒后打开弹窗，用于监测浏览器没有发起权限请求的情况
-        // self.showDialog();
-      }, 8000);
-      rec.open(
-        function () {
-          self.msg = "open recorder success";
-          // self.dialogCancel();
-          // self.reclog("已打开:" + self.type + " " + self.sampleRate + "hz " + self.bitRate + "kbps", 2);
-
-          // self.wave = Recorder.WaveView({
-          // 	elem: ".wave-view",
-          // 	lineWidth: 1
-          // });
-        },
-        function (msg, isUserNotAllow) {
-          this.msg = msg;
-          console.log(isUserNotAllow);
-          // self.reclog((isUserNotAllow ? "UserNotAllow，" : "") + "打开失败：" + msg, 1);
-        }
-      );
-      self.waitDialogClickFn = function () {
-        // self.dialogCancel();
-        // self.reclog("打开失败：权限请求被忽略，用户主动点击的弹窗", 1);
-      };
-    },
-    recStart: function () {
-      if (!this.rec) {
-        this.msg = "can not open recorder";
-        console.log("未打开录音");
-        return;
-      }
-      this.rec.start();
-      // var set = this.rec.set;
-      console.log("录制中");
-      this.msg = "recording";
-    },
-    recStop: function () {
-      var self = this;
-      var rec = self.rec;
-      if (!rec) {
-        console.log("未打开录音");
-        return;
-      }
-      // res.pause()
-      rec.stop(
-        function (blob, duration) {
-          // self.reclog("已录制:", "", {
-          // 	blob: blob,
-          // 	duration: duration,
-          // 	rec: rec
-          // });
-          self.blob = blob;
-          console.log(duration);
-          self.duration = duration;
-        },
-        function (s) {
-          this.msg = "error:" + s;
-          // self.reclog("结束出错：" + s, 1);
-        },
-        false
-      ); //自动close
-    },
-    recPlay: function () {
-      this.showAudio = true;
-      var audio = this.$refs.audioPlayer;
-      audio.onerror = function (e) {
-        console.log("play failed", e);
-      };
-      let url = window.URL
-      if(typeof window.webkitURL !== undefined){
-        url = window.webkitURL
-        // Toast.success('webkit')
-      }else{
-        url = window.URL
-      }
-      audio.src = url.createObjectURL(this.blob);
-      audio.play();
-      // const innerAudioContext = uni.createInnerAudioContext();
-      // innerAudioContext.autoplay = true;
-      // // innerAudioContext.src = 'https://vkceyugu.cdn.bspapp.com/VKCEYUGU-hello-uniapp/2cc220e0-c27a-11ea-9dfb-6da8e309e0d8.mp3';
-      // innerAudioContext.src = (window.URL || webkitURL).createObjectURL(this.blob);
-      // console.log(innerAudioContext.src)
-      // innerAudioContext.onPlay(() => {
-      //   console.log('开始播放');
-      // });
-      // innerAudioContext.onError((res) => {
-      //   console.log(res.errMsg);
-      //   console.log(res.errCode);
-      // });
-    },
     touchStart: function () {
-      console.log("this is a test");
-      Toast.loading({
-        message: "请跟读。。。",
-        // forbidClick: true,
-        closeOnClick: true,
-        duration: 0,
-      });
-      this.recStart();
+      // Toast.loading({
+      //   message: "请跟读。。。",
+      //   // forbidClick: true,
+      //   closeOnClick: true,
+      //   duration: 0,
+      // });
+      iseRecorder.setText(this.xfSymbols[this.selectedIdx]);
+      console.log("start recording");
+      iseRecorder.start();
     },
     touchEnd: function () {
       Toast.clear(true);
-      this.recStop();
+      console.log("recording end");
+      iseRecorder.stop();
     },
     replay: function () {
       Toast.clear(true);
       Toast.loading({
-        message: '录音回放',
-        duration: this.duration
-      })
-      this.recPlay()
+        message: "录音回放",
+        duration: 1,
+      });
+      // this.recPlay()
+    },
+    changeContent: function () {
+      this.selectedIdx = Math.round(Math.random() * 46);
     },
   },
   mounted() {
-    this.getRec();
+    // this.getRec();
+    const self = this;
+    iseRecorder.onTextChange = function (grade) {
+      if (grade) {
+        self.result =
+          grade.xml_result &&
+          grade.xml_result.read_sentence &&
+          grade.xml_result.read_sentence.rec_paper &&
+          grade.xml_result.read_sentence.rec_paper.read_chapter;
+          console.log(self.result)
+      }
+    };
   },
 };
 </script>

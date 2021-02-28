@@ -33,7 +33,7 @@
       justify="center"
       align="center"
       class="menu-row"
-      @click="navigate('questions/index')"
+      @click="navigate('en-sentence')"
     >
       <van-icon name="points" />
       <div>英文句子</div>
@@ -76,11 +76,11 @@ export default {
   },
   methods: {
     navigate: function (path) {
-		if(path !== 'phoneticsymbol'){
-			Toast.success('功能正在全力开发中，请耐心等候！')
-			return
-		}
-		this.$router.push('phoneticsymbol')
+		// if(path !== 'phoneticsymbol'){
+		// 	Toast.success('功能正在全力开发中，请耐心等候！')
+		// 	return
+		// }
+		this.$router.push(path)
 	},
   },
   mounted() {
