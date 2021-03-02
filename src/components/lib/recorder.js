@@ -7,7 +7,7 @@ const APPID = '6031c0ef'
 const API_SECRET = 'dbf6ff23d5bcd4062297b1395a947d80'
 const API_KEY = 'afe668f1eb12e05e76faf6ecce295d24'
 
-const transWorker =  new TransWorker()
+const transWorker = new TransWorker()
 
 class IseRecorder {
     constructor({ action, ent, language, accent, appId, text } = {}) {
@@ -20,12 +20,15 @@ class IseRecorder {
         this.appId = appId || APPID
         // 记录音频数据
         this.audioData = []
+        // 原始音频数据
+        this.audioDatas = []
         // 记录评测结果
         this.resultText = ''
         // wpgs下的评测结果需要中间状态辅助记录
         this.resultTextTemp = ''
         transWorker.onmessage = function (event) {
             self.audioData.push(...event.data)
+            self.audioDatas.push(...event.data)
         }
         this.text = text || 'how are you today'
     }
@@ -79,6 +82,122 @@ class IseRecorder {
                 e
                 this.recorderStop()
             }
+        })
+    }
+    initRecorder() {
+        navigator.getUserMedia =
+            navigator.getUserMedia ||
+            navigator.webkitGetUserMedia ||
+            navigator.mozGetUserMedia ||
+            navigator.msGetUserMedia
+        return new Promise((resolve, reject) => {
+            // 创建音频环境
+            try {
+                this.audioContext = new (window.AudioContext || window.webkitAudioContext)()
+                this.audioContext.resume()
+                if (!this.audioContext) {
+                    reject({
+                        success: false,
+                        message: '浏览器不支持webAudioApi相关接口'
+                    })
+                }
+            } catch (e) {
+                if (!this.audioContext) {
+                    reject({
+                        success: false,
+                        message: '浏览器不支持webAudioApi相关接口'
+                    })
+                }
+            }
+            // 获取浏览器录音权限
+            if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+                navigator.mediaDevices
+                    .getUserMedia({
+                        audio: true,
+                        video: false,
+                    })
+                    .then(stream => {
+                        getMediaSuccess(stream)
+                        resolve({
+                            success: true,
+                            message: '获取录音权限成功'
+                        })
+                    })
+                    .catch(e => {
+                        getMediaFail(e)
+                        reject({
+                            success: false,
+                            message: '获取录音权限失败'
+                        })
+                    })
+            } else if (navigator.getUserMedia) {
+                navigator.getUserMedia(
+                    {
+                        audio: true,
+                        video: false,
+                    },
+                    stream => {
+                        getMediaSuccess(stream)
+                        resolve({
+                            success: true,
+                            message: '获取录音权限成功'
+                        })
+                    },
+                    function (e) {
+                        getMediaFail(e)
+                        reject({
+                            success: false,
+                            message: '获取录音权限失败'
+                        })
+                    }
+                )
+            } else {
+                this.audioContext && this.audioContext.close()
+                if (navigator.userAgent.toLowerCase().match(/chrome/) && location.origin.indexOf('https://') < 0) {
+                    reject({
+                        success: false,
+                        message: 'chrome下获取浏览器录音功能，因为安全性问题，需要在localhost或127.0.0.1或https下才能获取权限'
+                    })
+                } else {
+                    reject({
+                        success: false,
+                        message: '无法获取浏览器录音功能，请升级浏览器或使用chrome'
+                    })
+                }
+            }
+            // 获取浏览器录音权限成功的回调
+            const self = this
+            let getMediaSuccess = stream => {
+                console.log('getMediaSuccess')
+                // 创建一个用于通过JavaScript直接处理音频
+                self.scriptProcessor = self.audioContext.createScriptProcessor(0, 1, 1)
+                self.scriptProcessor.onaudioprocess = e => {
+                    // 去处理音频数据
+                    if (self.status === 'ing') {
+                        self.audioDatas.push(e.inputBuffer.getChannelData(0))
+                        transWorker.postMessage(e.inputBuffer.getChannelData(0))
+                        // console.log(e.inputBuffer.getChannelData(0))
+                    }
+                }
+                // 创建一个新的MediaStreamAudioSourceNode 对象，使来自MediaStream的音频可以被播放和操作
+                self.mediaSource = self.audioContext.createMediaStreamSource(stream)
+                // 连接
+                self.mediaSource.connect(self.scriptProcessor)
+                self.scriptProcessor.connect(self.audioContext.destination)
+                self.connectWebSocket()
+            }
+
+            let getMediaFail = (e) => {
+                alert('请求麦克风失败')
+                console.log(e)
+                this.audioContext && this.audioContext.close()
+                this.audioContext = undefined
+                // 关闭websocket
+                if (this.webSocket && this.webSocket.readyState === 1) {
+                    this.webSocket.close()
+                }
+            }
+
         })
     }
     // 初始化浏览器录音
@@ -197,7 +316,7 @@ class IseRecorder {
         }
         return window.btoa(binary)
     }
-    setText(text){
+    setText(text) {
         this.text = text || 'how are you today'
     }
     // 向webSocket发送数据
@@ -326,6 +445,11 @@ class IseRecorder {
             url = `${url}?authorization=${authorization}&date=${date}&host=${host}`
             resolve(url)
         })
+    }
+    replay(){
+        let source = this.audioContext.createBufferSource()// audioCtx.createBufferSource();
+        source.buffer = this.audioContext.decodeAudioData(this.audioData)
+        source.start()
     }
 }
 
