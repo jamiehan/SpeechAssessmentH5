@@ -94,8 +94,8 @@
           name="service"
           size="30"
           color="#1989fa"
-          @touchStart="touchStart"
-          @touchEnd="touchEnd"
+          @touchstart="touchStart"
+          @touchend="touchEnd"
         />
         <div>长按跟读</div>
       </div>
@@ -111,7 +111,7 @@
       <div class="btn-next" @click="changeContent">换一个</div>
     </div>
     <!-- <div>
-      <button @click="touchStart(false)">开始</button>
+      <button @click="touchStart()">开始</button>
       <button @click="touchEnd">结束</button>
     </div> -->
     <div class="player">
@@ -125,13 +125,13 @@
 import IseRecorder from "../lib/recorder";
 import { NavBar, Image as VanImage, Icon, Toast, Popup } from "vant";
 
-const iseRecorder = new IseRecorder({
+let iseRecorder = new IseRecorder({
   action: "read_sentence",
   language: "en_us",
   accent: "",
   ent: "en_vip",
 });
-
+// console.log(iseRecorder)
 export default {
   components: {
     [NavBar.name]: NavBar,
@@ -180,19 +180,17 @@ export default {
     back() {
       this.$router.go(-1);
     },
-    touchStart: function (flag = true) {
+    touchStart: function () {
       if (this.support === false) {
         Toast.fail("初始化语音引擎失败，请刷新重试！");
         return;
       }
-      if (flag === true) {
-        Toast.loading({
-          message: "请跟读。。。",
-          forbidClick: true,
-          closeOnClick: true,
-          duration: 0,
-        });
-      }
+      Toast.loading({
+        message: "请跟读。。。",
+        forbidClick: true,
+        closeOnClick: true,
+        duration: 0,
+      });
       this.words = [];
       console.log("start recording");
       iseRecorder.setText(this.content);
@@ -255,11 +253,13 @@ export default {
         }
       };
     } else {
-      // this.show = true;
       Toast.fail("初始化语音引擎失败，请刷新重试！");
       this.support = false;
     }
   },
+  destroyed() {
+    // iseRecorder = null
+  }
 };
 </script>
 

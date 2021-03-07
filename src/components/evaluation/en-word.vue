@@ -1,7 +1,7 @@
 <template>
   <div>
     <van-nav-bar
-      title="英文音标"
+      title="英文单词"
       left-text="返回"
       left-arrow
       @click-left="back"
@@ -11,10 +11,10 @@
     <div class="content" style="padding-left: 12px; padding-right: 12px">
       <div class="title">
         <div></div>
-        <div>测评音标</div>
+        <div>测评单词</div>
       </div>
       <div class="card">
-        <div class="symbol">[{{ std }}]</div>
+        <div class="symbol">[{{ word }}]</div>
       </div>
       <div class="title">
         <div></div>
@@ -23,6 +23,22 @@
 
       <div class="card result">
         <div class="total-score">{{ score }}</div>
+        <div class="sylls-wrapper">
+          <div class="sylls">
+            <div v-for="s in sylls" :key="s.idx" class="syll">
+              <div>{{ s.std }}</div>
+              <div
+                :class="{
+                  red: s.score < 60,
+                  orange: s.score < 90 && s.score >= 60,
+                  green: s.score >= 90,
+                }"
+              >
+                {{ s.score }}
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
     <!-- <div>
@@ -59,7 +75,7 @@
 
 <script>
 import IseRecorder from "../lib/recorder";
-import { getRandomSymbol } from "../lib/mapping";
+import { getStdSymbol } from "../lib/mapping";
 import { NavBar, Image as VanImage, Icon, Toast } from "vant";
 
 let iseRecorder = new IseRecorder({
@@ -81,8 +97,7 @@ export default {
       modalName: "",
       msg: "",
       iseRecorder: null,
-      xf:'',
-      std:'',
+      word: "apple",
       result: {},
       support: false,
     };
@@ -94,6 +109,38 @@ export default {
         score = 0;
       }
       return Math.round(score);
+    },
+    sylls() {
+      let _sylls =
+        this.result.sentence &&
+        this.result.sentence.word &&
+        this.result.sentence.word.syll;
+      let sylls = [];
+      if (!_sylls) {
+        return sylls;
+      }
+      for (let i = 0, len = _sylls.length; i < len; i++) {
+        let obj = {};
+        obj.idx = i;
+        obj.score = Math.round(((_sylls[i].syll_score * 1 || 0) / 5) * 100);
+        obj.xf = _sylls[i].content;
+        let t = [],
+          tc = "";
+        if (_sylls[i].phone.length) {
+          t = _sylls[i].phone;
+        } else {
+          t.push(_sylls[i].phone);
+        }
+        for (let j = 0; j < t.length; j++) {
+          // Sylls.getStdSymbol
+          tc += getStdSymbol(t[j].content) + " ";
+        }
+        tc = tc.slice(0, -1);
+        obj.std = tc;
+        sylls.push(obj);
+      }
+      console.log(sylls);
+      return sylls;
     },
   },
   methods: {
@@ -129,10 +176,7 @@ export default {
       });
     },
     changeContent: function () {
-      const sylls = getRandomSymbol()
-      this.xf = sylls.xf
-      this.std = sylls.std
-      iseRecorder.setText("[word]" + this.xf);
+      iseRecorder.setText("[word]" + this.word);
     },
   },
   async mounted() {

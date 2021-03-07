@@ -44,10 +44,45 @@ const routes = [
         }
     },
     {
+        name: 'en-word',
+        component: () => import('./components/evaluation/en-word'),
+        meta: {
+            title: '英文单词'
+        }
+    },
+    {
         name: 'en-sentence',
         component: () => import('./components/evaluation/en-sentence'),
         meta: {
             title: '英文句子'
+        }
+    },
+    {
+        name: 'mocklist',
+        component: () => import('./components/mocks/index'),
+        meta: {
+            title: '套题模拟'
+        }
+    },
+    {
+        name: 'mockdetail',
+        component: () => import('./components/mocks/mocks'),
+        meta: {
+            title: '模拟考试'
+        }
+    },
+    {
+        name: 'questions',
+        component: () => import('./components/questions/index'),
+        meta: {
+            title: '题库列表'
+        }
+    },
+    {
+        name: 'questiondetail',
+        component: () => import('./components/questions/questions'),
+        meta: {
+            title: '模拟考试'
         }
     },
 ];

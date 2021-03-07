@@ -17,7 +17,7 @@ class IseRecorder {
         this.ent = ent || 'cn_vip'
         this.language = language || 'zh_cn'
         this.accent = accent || 'mandarin'
-        this.appId = appId || APPID
+        this.appId = '6031c0ef'
         // 记录音频数据
         this.audioData = []
         // 原始音频数据

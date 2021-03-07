@@ -1,13 +1,20 @@
 <template>
-  <div>
-    <van-row>
+  <div class="evaluation">
+    <van-nav-bar
+      title="语音评测"
+      left-text="返回"
+      left-arrow
+      @click-left="back"
+    >
+    </van-nav-bar>
+    <!-- <van-row>
       <van-image
         width="100%"
         height="240"
         fit="cover"
         :src="require('@/assets/componentBg.png')"
       />
-    </van-row>
+    </van-row> -->
     <van-row
       type="flex"
       justify="center"
@@ -23,7 +30,7 @@
       justify="center"
       align="center"
       class="menu-row"
-      @click="navigate('mocks/index')"
+      @click="navigate('en-word')"
     >
       <van-icon name="description" />
       <div>英文单词</div>
@@ -62,10 +69,11 @@
 </template>
 
 <script>
-import { Col, Row, Image, Icon, Toast } from "vant";
+import { NavBar, Col, Row, Image, Icon, Toast } from "vant";
 
 export default {
   components: {
+    [NavBar.name]: NavBar,
     [Col.name]: Col,
     [Row.name]: Row,
     [Image.name]: Image,
@@ -76,12 +84,15 @@ export default {
   },
   methods: {
     navigate: function (path) {
-		// if(path !== 'phoneticsymbol'){
-		// 	Toast.success('功能正在全力开发中，请耐心等候！')
-		// 	return
-		// }
-		this.$router.push(path)
-	},
+      // if(path !== 'phoneticsymbol'){
+      // 	Toast.success('功能正在全力开发中，请耐心等候！')
+      // 	return
+      // }
+      this.$router.push(path);
+    },
+    back(){
+      this.$router.go(-1);
+    }
   },
   mounted() {
     // this.getRec()
@@ -89,8 +100,9 @@ export default {
 };
 </script>
 <style lang="less">
+.evaluation{
 .menu-row {
-  margin-bottom: 10px;
+  margin-top: 10px;
   padding: 10px 0;
   background-color: white;
   color: blueviolet;
@@ -98,5 +110,6 @@ export default {
     margin-left: 8px;
     user-select: none;
   }
+}
 }
 </style>
