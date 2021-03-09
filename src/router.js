@@ -58,6 +58,13 @@ const routes = [
         }
     },
     {
+        name: 'en-paragraph',
+        component: () => import('./components/evaluation/en-paragraph'),
+        meta: {
+            title: '英文段落'
+        }
+    },
+    {
         name: 'mocklist',
         component: () => import('./components/mocks/index'),
         meta: {

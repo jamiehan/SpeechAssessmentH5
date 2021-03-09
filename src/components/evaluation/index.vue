@@ -50,7 +50,7 @@
       justify="center"
       align="center"
       class="menu-row"
-      @click="navigate('evaluation')"
+      @click="navigate('en-paragraph')"
     >
       <van-icon name="font-o" />
       <div>英文段落</div>
