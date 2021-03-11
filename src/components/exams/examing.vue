@@ -1,5 +1,5 @@
 <template>
-  <div style="overflow:hidden;">
+  <div style="overflow: hidden">
     <van-nav-bar fixed>
       <template #title>
         <van-count-down :time="time">
@@ -73,12 +73,8 @@
       </div>
     </div>
     <div class="footer">
-      <div @click="pre">
-        <van-icon name="arrow-left" size="18"/>上一题
-      </div>
-      <div @click="next">
-        下一题<van-icon name="arrow" size="18"/>
-      </div>
+      <div @click="pre"><van-icon name="arrow-left" size="18" />上一题</div>
+      <div @click="next">下一题<van-icon name="arrow" size="18" /></div>
     </div>
   </div>
 </template>
@@ -95,7 +91,7 @@ import {
   CellGroup,
   Checkbox,
   CheckboxGroup,
-  Field
+  Field,
 } from "vant";
 
 export default {
@@ -113,80 +109,13 @@ export default {
   },
   data() {
     return {
-      list: [
-        {
-          id: 1,
-          name: "1.1+1=2吗",
-          type: "singlechoice",
-          options: [
-            {
-              label: "A",
-              content: "正确",
-            },
-            {
-              label: "B",
-              content: "错误",
-            },
-            {
-              label: "C",
-              content: "不知道",
-            },
-          ],
-          answer: "",
-        },
-        {
-          id: 2,
-          name: "2.最喜欢什么好吃的",
-          type: "multichoice",
-          options: [
-            {
-              label: "A",
-              content: "四喜丸子",
-            },
-            {
-              label: "B",
-              content: "烧花鸭",
-            },
-            {
-              label: "C",
-              content: "蒸熊掌",
-            },
-            {
-              label: "D",
-              content: "喇嘛",
-            },
-          ],
-          answer: [],
-        },
-        {
-          id: 3,
-          name: "3.题目3",
-          type: "singlechoice",
-          options: [
-            {
-              label: "A",
-              content: "正确",
-            },
-            {
-              label: "B",
-              content: "错误",
-            },
-          ],
-          answer: "",
-        },
-        {
-          id: 4,
-          name: "4.简述你现在的心情",
-          type: "ownchoice",
-          answer: "",
-        },
-      ],
+      list: [],
       currentIdx: 0,
       examInfo: {
         name: "冬季摸底考试",
         total: 4,
       },
-      time: 30 * 60 * 60 * 1000
+      time: 30 * 60 * 60 * 1000,
     };
   },
   methods: {
@@ -215,9 +144,22 @@ export default {
         console.log("已经是最后一道题了");
       }
     },
+    async getExamInfo(id) {
+      const result = await this.request.get(
+        "/exam-start-api?token=" +
+          localStorage.getItem("token") +
+          "&examId=" +
+          id
+      );
+      console.log(result)
+    },
   },
   mounted() {
-    this.current = this.list[0];
+    const id = this.$route.params.id;
+    if (id) {
+      this.getExamInfo(id);
+    } else {
+    }
   },
 };
 </script>
@@ -259,7 +201,7 @@ export default {
   background-color: white;
   height: 100%;
 }
-.footer{
+.footer {
   position: fixed;
   display: flex;
   justify-content: space-between;
@@ -269,7 +211,7 @@ export default {
   padding: 10px 12px;
   background-color: white;
   color: #1989fa;
-  div{
+  div {
     display: flex;
     align-items: center;
   }

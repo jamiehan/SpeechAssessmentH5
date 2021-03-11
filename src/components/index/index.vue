@@ -90,7 +90,7 @@ export default {
     return {
       userInfo: {
         name: "",
-        id: "",
+        userid: "",
       },
       name: "",
       password: "",
@@ -104,18 +104,38 @@ export default {
     showLoginBox() {
       this.show = true;
     },
-    login(action, done) {
+    async login(action, done) {
       if (action === "confirm") {
         if (this.name.trim() == "" || this.password.trim() == "") {
           Toast("用户名或密码不能为空!");
           done(false);
         } else {
-          setTimeout(done, 2000);
+          const result = await this.request.post("/api/login", {
+            userName: this.name, //student03,
+            password: this.password, //123456
+          });
+          if (result.respCode != "200") {
+            Toast(result.respMessage);
+            done(false);
+          } else {
+            // console.log(result)
+            localStorage.setItem("userid", result.data.userid);
+            localStorage.setItem("token", result.data.token);
+            localStorage.setItem("username", this.name);
+            this.userInfo.name = this.name;
+            this.userInfo.userid = result.data.userid;
+            done();
+          }
         }
       } else {
+        // this.request.
         done();
       }
     },
+  },
+  mounted() {
+    this.userInfo.name = localStorage.getItem("username") || ''
+    this.userInfo.userid = localStorage.getItem("userid") || ''
   },
 };
 </script>

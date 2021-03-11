@@ -10,91 +10,121 @@
     </van-nav-bar>
     <div class="content">
       <div class="exam-list">
-        <div class="exam-item" v-for="l in list" :key="l.id">
-          <div>
-            <div class="name">{{ l.name }}</div>
-            <div class="info">
-              共{{ l.total }}题，总分{{ l.score }}分，考试时长{{ l.time }}分钟
+        <van-list
+          v-model="loading"
+          :finished="finished"
+          @load="getExams"
+          :error.sync="error"
+          error-text="请求失败，点击重新加载"
+        >
+          <!-- <van-cell v-for="item in list" :key="item" :title="item" /> -->
+          <div v-if="list.length == 0 && finished" class="no-exams">
+            未找到适合您的考试哟
+          </div>
+          <div class="exam-item" v-for="l in list" :key="l.examId">
+            <div>
+              <div class="name">{{ l.examPaperName }}</div>
+              <!-- <div class="info">
+                共{{ l.total }}题，总分{{ l.score }}分，考试时长{{ l.time }}分钟
+              </div> -->
+            </div>
+            <div class="action">
+              <van-icon
+                name="records"
+                size="20"
+                v-if="!l.finished"
+                @click="confirm(l)"
+              />
+              <van-icon name="passed" size="20" v-if="l.finished" />
             </div>
           </div>
-          <div class="action">
-            <van-icon
-              name="records"
-              size="20"
-              v-if="!l.finished"
-              @click="confirm"
-            />
-            <van-icon name="passed" size="20" v-if="l.finished" />
-          </div>
-        </div>
+        </van-list>
       </div>
     </div>
   </div>
 </template>
 
 <script>
-import { NavBar, Icon, Dialog } from "vant";
+import { NavBar, Icon, Dialog, Loading, List, Toast } from "vant";
 export default {
   components: {
     [NavBar.name]: NavBar,
     [Icon.name]: Icon,
+    [Loading.name]: Loading,
+    [List.name]: List,
     // [Dialog.Component.name]: Dialog,
   },
   data() {
     return {
       modalName: null,
-      list: [
-        {
-          id: 1,
-          name: "2020-2021秋六年级期末试卷",
-          total: 50,
-          score: 100,
-          finished: false,
-          time: 90,
-        },
-        {
-          id: 2,
-          name: "考试2",
-          total: 50,
-          score: 100,
-          finished: false,
-          time: 90,
-        },
-        {
-          id: 3,
-          name: "考试3",
-          total: 50,
-          score: 100,
-          finished: true,
-          time: 90,
-        },
-      ],
+      list: [],
+      loading: true,
+      finished: false,
+      error: false,
     };
   },
   methods: {
-    getExams() {},
+    async getExams() {
+      const result = await this.request.get(
+        "/exam-list-api?token=" + localStorage.getItem("token")
+      );
+      if (result.respCode != "200") {
+        this.error = true;
+      } else {
+        const data = result.data;
+        // this.list = data.examListToStart;
+        this.list = data.modelTestToStart;
+        this.finished = true;
+      }
+    },
+    reload() {
+      setTimeout(() => {
+        Toast("刷新成功");
+        this.loading = false;
+        this.count++;
+      }, 1000);
+    },
     open() {
       this.modalName = "confirmModal";
     },
     close() {
       this.modalName = "";
     },
-    confirm() {
-      Dialog.confirm({
-        message: "开始考试后无法取消和暂停，确认开始考试吗？",
-        confirmButtonColor: "#1989fa",
-      })
-        .then(() => {
-          this.$router.push('examing')
+    async confirm(obj) {
+      const result = await this.getExamInfo(obj.examId);
+      if (result.respCode != 200) {
+        Toast.fail(result.respMessage);
+      } else {
+        Dialog.confirm({
+          message: "开始考试后无法取消和暂停，确认开始考试吗？",
+          confirmButtonColor: "#1989fa",
         })
-        .catch(() => {});
+          .then(() => {
+            this.$router.push({
+              name: "examing",
+              params: {
+                id: obj.examId,
+              },
+            });
+          })
+          .catch(() => {});
+      }
     },
     back() {
-      this.$router.push('index')
+      this.$router.push("index");
+    },
+    getExamInfo(id) {
+      return this.request.get(
+        "/exam-start-api?token=" +
+          localStorage.getItem("token") +
+          "&examId=" +
+          id
+      );
+      console.log(result);
     },
   },
   mounted() {
-    // this.getRec()
+    this.getExams();
   },
 };
 </script>
@@ -105,22 +135,27 @@ div {
 }
 .content {
   margin-top: 46px;
-}
-.exam-item {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 8px 10px;
-  background-color: white;
-  border-bottom: 1px solid rgba(170, 170, 170, 0.3);
-  .name {
-    font-size: 14px;
-    text-align: left;
+  .exam-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 8px 10px;
+    background-color: white;
+    border-bottom: 1px solid rgba(170, 170, 170, 0.3);
+    .name {
+      font-size: 14px;
+      text-align: left;
+    }
+    .info {
+      font-size: 12px;
+      color: #aaaaaa;
+      text-align: left;
+    }
   }
-  .info {
-    font-size: 12px;
-    color: #aaaaaa;
-    text-align: left;
+  .no-exams {
+    font-size: 14px;
+    color: rgba(170, 170, 170, 0.7);
+    padding-top: 32px;
   }
 }
 </style>
