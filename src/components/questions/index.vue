@@ -23,7 +23,7 @@
                 name="records"
                 size="20"
                 v-if="!l.finished"
-                @click="confirm"
+                @click="confirm(l)"
               />
               <van-icon name="passed" size="20" v-if="l.finished" />
             </div>
@@ -59,7 +59,8 @@ export default {
         this.error = true;
       } else {
         const data = result.data;
-        this.list = data.examListToApply;
+        // this.list = data.examListToApply;
+        this.list = data.examListToStart;
         this.finished = true;
       }
     },
@@ -69,15 +70,21 @@ export default {
     close() {
       this.modalName = "";
     },
-    confirm() {
-      this.$router.push("questiondetail");
+    confirm(obj) {
+      this.$router.push({
+        name: "questiondetail",
+        params: {
+          id: obj.examId,
+          name: obj.examPaperName,
+        },
+      });
     },
     back() {
       this.$router.push("index");
     },
   },
   mounted() {
-    // this.getRec()
+    this.getExams()
   },
 };
 </script>

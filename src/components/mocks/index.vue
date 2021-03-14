@@ -1,7 +1,7 @@
 <template>
   <div>
     <van-nav-bar
-      title="套题列表"
+      title="模拟考试列表"
       left-text="返回"
       left-arrow
       @click-left="back"
@@ -10,24 +10,26 @@
     </van-nav-bar>
     <div class="content">
       <div class="exam-list">
-        <div v-if="list.length == 0" class="no-exams">未找到适合您的模拟考试信息。</div>
-          <div class="exam-item" v-for="l in list" :key="l.examId">
-            <div>
-              <div class="name">{{ l.examPaperName }}</div>
-              <!-- <div class="info">
+        <div v-if="list.length == 0" class="no-exams">
+          未找到适合您的模拟考试信息。
+        </div>
+        <div class="exam-item" v-for="l in list" :key="l.examId">
+          <div>
+            <div class="name">{{ l.examPaperName }}</div>
+            <!-- <div class="info">
                 共{{ l.total }}题，总分{{ l.score }}分，考试时长{{ l.time }}分钟
               </div> -->
-            </div>
-            <div class="action">
-              <van-icon
-                name="records"
-                size="20"
-                v-if="!l.finished"
-                @click="confirm"
-              />
-              <van-icon name="passed" size="20" v-if="l.finished" />
-            </div>
           </div>
+          <div class="action">
+            <van-icon
+              name="records"
+              size="20"
+              v-if="!l.finished"
+              @click="confirm(l)"
+            />
+            <van-icon name="passed" size="20" v-if="l.finished" />
+          </div>
+        </div>
       </div>
     </div>
   </div>
@@ -69,15 +71,21 @@ export default {
     close() {
       this.modalName = "";
     },
-    confirm() {
-      this.$router.push("mockdetail");
+    confirm(obj) {
+      this.$router.push({
+        name: "mockdetail",
+        params: {
+          id: obj.examId,
+          name: obj.examPaperName,
+        },
+      });
     },
     back() {
       this.$router.push("index");
     },
   },
   mounted() {
-    this.getExams()
+    this.getExams();
   },
 };
 </script>
