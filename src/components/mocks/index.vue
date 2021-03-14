@@ -10,7 +10,7 @@
     </van-nav-bar>
     <div class="content">
       <div class="exam-list">
-        <div v-if="list.length == 0" class="no-exams">未找到适合您的考试哟</div>
+        <div v-if="list.length == 0" class="no-exams">未找到适合您的模拟考试信息。</div>
           <div class="exam-item" v-for="l in list" :key="l.examId">
             <div>
               <div class="name">{{ l.examPaperName }}</div>

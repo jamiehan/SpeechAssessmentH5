@@ -12,14 +12,16 @@
       <div class="exam-list">
         <van-list
           v-model="loading"
+          loading-text="获取考试信息..."
           :finished="finished"
           @load="getExams"
-          :error.sync="error"
-          error-text="请求失败，点击重新加载"
         >
           <!-- <van-cell v-for="item in list" :key="item" :title="item" /> -->
-          <div v-if="list.length == 0 && finished" class="no-exams">
-            未找到适合您的考试哟
+          <div v-if="list.length == 0 && finished == true && error == false" class="no-exams">
+            未找到适合您的考试信息。
+          </div>
+          <div v-if="error == true" class="no-exams">
+            请求失败，请刷新重试!
           </div>
           <div class="exam-item" v-for="l in list" :key="l.examId">
             <div>
@@ -69,11 +71,12 @@ export default {
         "/exam-list-api?token=" + localStorage.getItem("token")
       );
       if (result.respCode != "200") {
+        this.finished = true;
         this.error = true;
       } else {
         const data = result.data;
-        // this.list = data.examListToStart;
-        this.list = data.modelTestToStart;
+        this.list = data.examListToStart;
+        this.error = false;
         this.finished = true;
       }
     },
@@ -104,6 +107,7 @@ export default {
               name: "examing",
               params: {
                 id: obj.examId,
+                name: obj.examPaperName
               },
             });
           })
@@ -120,11 +124,10 @@ export default {
           "&examId=" +
           id
       );
-      console.log(result);
     },
   },
   mounted() {
-    this.getExams();
+    this.getExams()
   },
 };
 </script>
