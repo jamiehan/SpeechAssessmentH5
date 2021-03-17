@@ -99,7 +99,15 @@ export default {
   },
   methods: {
     navigate(path) {
-      this.$router.push(path);
+      let canPush = true;
+      if (path != "evaluation" && !localStorage.getItem('token')) {
+        canPush = false;
+      }
+      if (canPush) {
+        this.$router.push(path);
+      } else {
+        Toast("请先登录后再使用此功能!");
+      }
     },
     showLoginBox() {
       this.show = true;
@@ -124,6 +132,11 @@ export default {
             localStorage.setItem("username", this.name);
             this.userInfo.name = this.name;
             this.userInfo.userid = result.data.userid;
+            setTimeout(() => {
+              this.userInfo.name = ''
+              this.userInfo.userid = ''
+              localStorage.clear()
+            }, 3600000);
             done();
           }
         }
@@ -134,8 +147,8 @@ export default {
     },
   },
   mounted() {
-    this.userInfo.name = localStorage.getItem("username") || ''
-    this.userInfo.userid = localStorage.getItem("userid") || ''
+    this.userInfo.name = localStorage.getItem("username") || "";
+    this.userInfo.userid = localStorage.getItem("userid") || "";
   },
 };
 </script>

@@ -22,17 +22,19 @@
         <div>测评结果</div>
       </div>
       <div class="card result">
-        <div class="total-result-wrapper"
-        :class="{
-              active: words.length > 0
-            }">
+        <div
+          class="total-result-wrapper"
+          :class="{
+            active: words.length > 0,
+          }"
+        >
           <div
             class="total-score"
             :class="{
               red: total_score < 60,
               orange: total_score < 90 && total_score >= 60,
               green: total_score >= 90,
-              active: words.length > 0
+              active: words.length > 0,
             }"
           >
             {{ total_score }}
@@ -110,6 +112,7 @@
       </div>
       <div class="btn-next" @click="changeContent">换一个</div>
     </div>
+    <audio></audio>
     <div>
       <button @click="start">开始</button>
       <button @click="end">结束</button>
@@ -156,7 +159,7 @@ export default {
       show: false,
       support: false,
       words: [],
-      dpMessages: ['正常','漏读','增读','回读','替换']//0正常；16漏读；32增读；64回读；128替换
+      dpMessages: ["正常", "漏读", "增读", "回读", "替换"], //0正常；16漏读；32增读；64回读；128替换
     };
   },
   computed: {
@@ -222,7 +225,8 @@ export default {
       }
       Toast.clear(true);
       // console.log(iseRecorder.audioDatas)
-      iseRecorder.replay();
+      var myAudio = document.querySelector('audio');
+      iseRecorder.replay(myAudio);
       // Toast.loading({
       //   message: "录音回放",
       //   duration: 1,
@@ -240,30 +244,43 @@ export default {
       this.changeContent();
       iseRecorder.onTextChange = function (grade) {
         if (grade) {
-          console.log(grade);
           self.result =
             grade.xml_result &&
             grade.xml_result.read_chapter &&
             grade.xml_result.read_chapter.rec_paper &&
             grade.xml_result.read_chapter.rec_paper.read_chapter;
-          const words = self.result.sentence.word;
-          self.words = [];
-          for (const d of words) {
-            if (isNaN(d.global_index)) {
-              continue;
-            } else {
-              let dpMessage = 0
-              if(!isNaN(d.dp_message) && d.dp_message != 0) {
-                dpMessage =  self.dpMessages[Math.log2(parseInt(d.dp_message || 0)) - 3]
+          if (
+            self.result.is_rejected == "true" &&
+            iseRecorder.status === "end"
+          ) {
+            Toast({
+              message: "请正确朗读所示段落",
+            });
+            self.result.total_score = 0;
+            self.result.accuracy_score = 0
+            self.result.fluency_score = 0
+            self.result.integrity_score = 0
+            self.result.standard_score = 0
+          } else {
+            const words = self.result.sentence.word;
+            self.words = [];
+            for (const d of words) {
+              if (isNaN(d.global_index)) {
+                continue;
+              } else {
+                let dpMessage = 0;
+                if (!isNaN(d.dp_message) && d.dp_message != 0) {
+                  dpMessage =
+                    self.dpMessages[Math.log2(parseInt(d.dp_message || 0)) - 3];
+                }
+                self.words.push({
+                  content: d.content,
+                  score: Math.floor(((d.total_score || 0) / 5) * 100),
+                  dp_message: dpMessage,
+                });
               }
-              self.words.push({
-                content: d.content,
-                score: Math.floor(((d.total_score || 0) / 5) * 100),
-                dp_message: dpMessage,
-              });
             }
           }
-          console.log(self.words);
         }
       };
     } else {
@@ -273,7 +290,7 @@ export default {
   },
   destroyed() {
     // iseRecorder = null
-  }
+  },
 };
 </script>
 
@@ -358,7 +375,7 @@ div {
         }
       }
     }
-    .total-result-wrapper.active{
+    .total-result-wrapper.active {
       border-bottom: 1px dashed #ddd;
     }
     .result-detail {
@@ -375,7 +392,7 @@ div {
           div:nth-child(odd) {
             font-size: 12px;
             padding: 2px 4px;
-            border-radius:2px;
+            border-radius: 2px;
           }
         }
       }
@@ -412,7 +429,7 @@ div {
 }
 .green {
   background-image: linear-gradient(45deg, #39b54a, #8dc63f);
-  color:white;
+  color: white;
 }
 .orange {
   background-image: linear-gradient(45deg, #eef123e8, #e9fa00);
@@ -420,6 +437,6 @@ div {
 }
 .red {
   background-image: linear-gradient(45deg, #e74e4e, #f70808);
-  color:white;
+  color: white;
 }
 </style>

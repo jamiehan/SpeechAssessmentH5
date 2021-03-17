@@ -174,7 +174,7 @@ class IseRecorder {
                 self.scriptProcessor.onaudioprocess = e => {
                     // 去处理音频数据
                     if (self.status === 'ing') {
-                        self.audioDatas.push(e.inputBuffer.getChannelData(0))
+                        // self.audioDatas = self.audioDatas.concat(e.inputBuffer.getChannelData(0))
                         transWorker.postMessage(e.inputBuffer.getChannelData(0))
                         // console.log(e.inputBuffer.getChannelData(0))
                     }
@@ -446,10 +446,26 @@ class IseRecorder {
             resolve(url)
         })
     }
-    replay(){
-        let source = this.audioContext.createBufferSource()// audioCtx.createBufferSource();
-        source.buffer = this.audioContext.decodeAudioData(this.audioData)
-        source.start()
+    replay(audio){
+        // console.log(this.mediaSource)
+        // var biquadFilter = this.audioContext.createBiquadFilter();
+        // biquadFilter.type = "lowshelf";
+        // biquadFilter.frequency.value = 1000;
+        // biquadFilter.gain.value = 50;
+        // this.mediaSource.connect(biquadFilter);
+
+        // range.oninput = function() {
+        //     biquadFilter.gain.value = range.value;
+        // }
+        console.log(this.audioDatas)
+        // let source = this.audioContext.createBufferSource()// audioCtx.createBufferSource();
+        // let buffer = this.audioContext.decodeAudioData(this.audioDatas)
+        // console.log(buffer)
+        // let au = document.createElement('audio')
+        // var source = this.audioContext.createMediaElementSource(au);
+        // document.body.appendChild(au)
+        // au.play()
+        // source.start()
     }
 }
 

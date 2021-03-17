@@ -12,6 +12,7 @@
     "core-js": "^3.6.5",
     "crypto-js": "^4.0.0",
     "fast-xml-parser": "^3.17.4",
+    "recorder-core": "^1.1.21021500",
     "vant": "^2.12.6",
     "vue": "^2.6.11",
     "vue-router": "^3.5.1",
