@@ -22,17 +22,19 @@
         <div>测评结果</div>
       </div>
       <div class="card result">
-        <div class="total-result-wrapper"
-        :class="{
-              active: words.length > 0
-            }">
+        <div
+          class="total-result-wrapper"
+          :class="{
+            active: words.length > 0,
+          }"
+        >
           <div
             class="total-score"
             :class="{
               red: total_score < 60,
               orange: total_score < 90 && total_score >= 60,
               green: total_score >= 90,
-              active: words.length > 0
+              active: words.length > 0,
             }"
           >
             {{ total_score }}
@@ -111,8 +113,8 @@
       <div class="btn-next" @click="changeContent">换一个</div>
     </div>
     <!-- <div>
-      <button @click="touchStart()">开始</button>
-      <button @click="touchEnd">结束</button>
+      <button @click="start()">开始</button>
+      <button @click="stop">结束</button>
     </div> -->
     <div class="player">
       <audio src="" ref="audioPlayer"></audio>
@@ -122,10 +124,10 @@
 </template>
 
 <script>
-import IseRecorder from "../lib/recorder";
+import RecorderWrapper from "../lib/recorder/recorder-wrapper";
 import { NavBar, Image as VanImage, Icon, Toast, Popup } from "vant";
 
-let iseRecorder = new IseRecorder({
+let iseRecorder = new RecorderWrapper({
   action: "read_sentence",
   language: "en_us",
   accent: "",
@@ -156,7 +158,7 @@ export default {
       show: false,
       support: false,
       words: [],
-      dpMessages: ['正常','漏读','增读','回读','替换']//0正常；16漏读；32增读；64回读；128替换
+      dpMessages: ["正常", "漏读", "增读", "回读", "替换"], //0正常；16漏读；32增读；64回读；128替换
     };
   },
   computed: {
@@ -181,10 +183,6 @@ export default {
       this.$router.go(-1);
     },
     touchStart: function () {
-      if (this.support === false) {
-        Toast.fail("初始化语音引擎失败，请刷新重试！");
-        return;
-      }
       Toast.loading({
         message: "请跟读。。。",
         forbidClick: true,
@@ -201,18 +199,22 @@ export default {
       console.log("recording end");
       iseRecorder.stop();
     },
+    start() {
+      this.words = [];
+      iseRecorder.setText(this.content);
+      iseRecorder.start();
+    },
+    stop() {
+      console.log("recording end");
+      iseRecorder.stop();
+    },
     replay: function () {
-      if (this.support === false) {
-        Toast.fail("初始化语音引擎失败，请刷新重试！");
-        return;
-      }
       Toast.clear(true);
-      // console.log(iseRecorder.audioDatas)
-      iseRecorder.replay();
-      // Toast.loading({
-      //   message: "录音回放",
-      //   duration: 1,
-      // });
+      Toast.loading({
+        message: "回放",
+        duration: iseRecorder.recorder.duration * 1000,
+      });
+      iseRecorder.play();
     },
     changeContent: function () {
       this.content = this.contents[Math.round(Math.random() * 3)];
@@ -220,46 +222,40 @@ export default {
   },
   async mounted() {
     const self = this;
-    let result = await iseRecorder.initRecorder();
-    if (result.success === true) {
-      this.support = true;
-      this.changeContent();
-      iseRecorder.onTextChange = function (grade) {
-        if (grade) {
-          console.log(grade);
-          self.result =
-            grade.xml_result &&
-            grade.xml_result.read_sentence &&
-            grade.xml_result.read_sentence.rec_paper &&
-            grade.xml_result.read_sentence.rec_paper.read_chapter;
-          const words = self.result.sentence.word;
-          self.words = [];
-          for (const d of words) {
-            if (isNaN(d.global_index)) {
-              continue;
-            } else {
-              let dpMessage = 0
-              if(!isNaN(d.dp_message) && d.dp_message != 0) {
-                dpMessage =  self.dpMessages[Math.log2(parseInt(d.dp_message || 0)) - 3]
-              }
-              self.words.push({
-                content: d.content,
-                score: Math.floor(((d.total_score || 0) / 5) * 100),
-                dp_message: dpMessage,
-              });
+    this.changeContent();
+    iseRecorder.onTextChange = function (grade) {
+      if (grade) {
+        console.log(grade);
+        self.result =
+          grade.xml_result &&
+          grade.xml_result.read_sentence &&
+          grade.xml_result.read_sentence.rec_paper &&
+          grade.xml_result.read_sentence.rec_paper.read_chapter;
+        const words = self.result.sentence.word;
+        self.words = [];
+        for (const d of words) {
+          if (isNaN(d.global_index)) {
+            continue;
+          } else {
+            let dpMessage = 0;
+            if (!isNaN(d.dp_message) && d.dp_message != 0) {
+              dpMessage =
+                self.dpMessages[Math.log2(parseInt(d.dp_message || 0)) - 3];
             }
+            self.words.push({
+              content: d.content,
+              score: Math.floor(((d.total_score || 0) / 5) * 100),
+              dp_message: dpMessage,
+            });
           }
-          console.log(self.words);
         }
-      };
-    } else {
-      Toast.fail("初始化语音引擎失败，请刷新重试！");
-      this.support = false;
-    }
+        console.log(self.words);
+      }
+    };
   },
   destroyed() {
     // iseRecorder = null
-  }
+  },
 };
 </script>
 
@@ -344,7 +340,7 @@ div {
         }
       }
     }
-    .total-result-wrapper.active{
+    .total-result-wrapper.active {
       border-bottom: 1px dashed #ddd;
     }
     .result-detail {
@@ -361,7 +357,7 @@ div {
           div:nth-child(odd) {
             font-size: 12px;
             padding: 2px 4px;
-            border-radius:2px;
+            border-radius: 2px;
           }
         }
       }
@@ -398,7 +394,7 @@ div {
 }
 .green {
   background-image: linear-gradient(45deg, #39b54a, #8dc63f);
-  color:white;
+  color: white;
 }
 .orange {
   background-image: linear-gradient(45deg, #eef123e8, #e9fa00);
@@ -406,6 +402,6 @@ div {
 }
 .red {
   background-image: linear-gradient(45deg, #e74e4e, #f70808);
-  color:white;
+  color: white;
 }
 </style>

@@ -113,10 +113,10 @@
       <div class="btn-next" @click="changeContent">换一个</div>
     </div>
     <audio></audio>
-    <div>
+    <!-- <div>
       <button @click="start">开始</button>
       <button @click="end">结束</button>
-    </div>
+    </div> -->
     <div class="player">
       <audio src="" ref="audioPlayer"></audio>
     </div>
@@ -125,16 +125,15 @@
 </template>
 
 <script>
-import IseRecorder from "../lib/recorder";
+import RecorderWrapper from "../lib/recorder/recorder-wrapper";
 import { NavBar, Image as VanImage, Icon, Toast, Popup } from "vant";
 
-let iseRecorder = new IseRecorder({
+let recorder = new RecorderWrapper({
   action: "read_chapter",
   language: "en_us",
   accent: "",
   ent: "en_vip",
 });
-// console.log(iseRecorder)
 export default {
   components: {
     [NavBar.name]: NavBar,
@@ -184,112 +183,83 @@ export default {
       this.$router.go(-1);
     },
     touchStart: function () {
-      if (this.support === false) {
-        Toast.fail("初始化语音引擎失败，请刷新重试！");
-        return;
-      }
       Toast.loading({
         message: "请跟读。。。",
         forbidClick: true,
-        closeOnClick: true,
+        closeOnClick: false,
         duration: 0,
       });
       this.words = [];
-      console.log("start recording");
-      iseRecorder.setText(this.content);
-      iseRecorder.start();
+      recorder.setText(this.content);
+      recorder.start();
     },
     touchEnd: function () {
       Toast.clear(true);
-      console.log("recording end");
-      iseRecorder.stop();
+      recorder.stop();
     },
     start: function () {
-      if (this.support === false) {
-        Toast.fail("初始化语音引擎失败，请刷新重试！");
-        return;
-      }
-      this.words = [];
-      console.log("start recording");
-      iseRecorder.setText(this.content);
-      iseRecorder.start();
+      recorder.setText(this.content);
+      recorder.start();
     },
     end: function () {
-      console.log("recording end");
-      iseRecorder.stop();
+      recorder.stop();
     },
     replay: function () {
-      if (this.support === false) {
-        Toast.fail("初始化语音引擎失败，请刷新重试！");
-        return;
-      }
       Toast.clear(true);
-      // console.log(iseRecorder.audioDatas)
-      var myAudio = document.querySelector('audio');
-      iseRecorder.replay(myAudio);
-      // Toast.loading({
-      //   message: "录音回放",
-      //   duration: 1,
-      // });
+      Toast.loading({
+        message: "回放",
+        duration: recorder.recorder.duration * 1000,
+      });
+      recorder.play();
     },
     changeContent: function () {
       this.content = this.contents[Math.round(Math.random() * 3)];
     },
   },
-  async mounted() {
+  mounted() {
     const self = this;
-    let result = await iseRecorder.initRecorder();
-    if (result.success === true) {
-      this.support = true;
-      this.changeContent();
-      iseRecorder.onTextChange = function (grade) {
-        if (grade) {
-          self.result =
-            grade.xml_result &&
-            grade.xml_result.read_chapter &&
-            grade.xml_result.read_chapter.rec_paper &&
-            grade.xml_result.read_chapter.rec_paper.read_chapter;
-          if (
-            self.result.is_rejected == "true" &&
-            iseRecorder.status === "end"
-          ) {
-            Toast({
-              message: "请正确朗读所示段落",
-            });
-            self.result.total_score = 0;
-            self.result.accuracy_score = 0
-            self.result.fluency_score = 0
-            self.result.integrity_score = 0
-            self.result.standard_score = 0
-          } else {
-            const words = self.result.sentence.word;
-            self.words = [];
-            for (const d of words) {
-              if (isNaN(d.global_index)) {
-                continue;
-              } else {
-                let dpMessage = 0;
-                if (!isNaN(d.dp_message) && d.dp_message != 0) {
-                  dpMessage =
-                    self.dpMessages[Math.log2(parseInt(d.dp_message || 0)) - 3];
-                }
-                self.words.push({
-                  content: d.content,
-                  score: Math.floor(((d.total_score || 0) / 5) * 100),
-                  dp_message: dpMessage,
-                });
+    this.changeContent();
+    recorder.onTextChange = function (grade) {
+      if (grade) {
+        self.result =
+          grade.xml_result &&
+          grade.xml_result.read_chapter &&
+          grade.xml_result.read_chapter.rec_paper &&
+          grade.xml_result.read_chapter.rec_paper.read_chapter;
+        if (self.result.is_rejected == "true" && recorder.status === "end") {
+          Toast({
+            message: "请正确朗读所示段落",
+          });
+          self.result.total_score = 0;
+          self.result.accuracy_score = 0;
+          self.result.fluency_score = 0;
+          self.result.integrity_score = 0;
+          self.result.standard_score = 0;
+        } else {
+          const words = self.result.sentence.word;
+          self.words = [];
+          for (const d of words) {
+            if (isNaN(d.global_index)) {
+              continue;
+            } else {
+              let dpMessage = 0;
+              if (!isNaN(d.dp_message) && d.dp_message != 0) {
+                dpMessage =
+                  self.dpMessages[Math.log2(parseInt(d.dp_message || 0)) - 3];
               }
+              self.words.push({
+                content: d.content,
+                score: Math.floor(((d.total_score || 0) / 5) * 100),
+                dp_message: dpMessage,
+              });
             }
           }
         }
-      };
-    } else {
-      Toast.fail("初始化语音引擎失败，请刷新重试！");
-      this.support = false;
-    }
+      }
+    };
   },
   destroyed() {
-    // iseRecorder = null
+    recorder.dispose();
   },
 };
 </script>

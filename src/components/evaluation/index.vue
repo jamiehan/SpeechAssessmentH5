@@ -55,7 +55,7 @@
       <van-icon name="font-o" />
       <div>英文段落</div>
     </van-row>
-    <van-row
+    <!-- <van-row
       type="flex"
       justify="center"
       align="center"
@@ -64,7 +64,7 @@
     >
       <van-icon name="apps-o" />
       <div>英文对比</div>
-    </van-row>
+    </van-row> -->
   </div>
 </template>
 

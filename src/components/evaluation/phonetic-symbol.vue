@@ -58,16 +58,16 @@
 </template>
 
 <script>
-import IseRecorder from "../lib/recorder";
+import RecorderWrapper from '../lib/recorder/recorder-wrapper'
 import { getRandomSymbol } from "../lib/mapping";
 import { NavBar, Image as VanImage, Icon, Toast } from "vant";
 
-let iseRecorder = new IseRecorder({
+let iseRecorder = new RecorderWrapper({
   action: "read_word",
   language: "en_us",
   accent: "",
   ent: "en_vip",
-});
+})
 
 export default {
   components: {
@@ -124,9 +124,10 @@ export default {
     replay: function () {
       Toast.clear(true);
       Toast.loading({
-        message: "录音回放",
-        duration: 1,
+        message: "回放",
+        duration: iseRecorder.recorder.duration * 1000,
       });
+      iseRecorder.play()
     },
     changeContent: function () {
       const sylls = getRandomSymbol()
@@ -137,33 +138,26 @@ export default {
   },
   async mounted() {
     const self = this;
-    let result = await iseRecorder.initRecorder();
-    if (result.success === true) {
-      this.support = true;
-      this.changeContent();
-      iseRecorder.onTextChange = function (grade) {
-        if (grade) {
-          console.log(grade);
-          self.result =
-            grade.xml_result &&
-            grade.xml_result.read_word &&
-            grade.xml_result.read_word.rec_paper &&
-            grade.xml_result.read_word.rec_paper.read_word;
-          if (
-            self.result.is_rejected == "true" &&
-            iseRecorder.status === "end"
-          ) {
-            Toast({
-              message: "请正确朗读所示单词",
-            });
-            self.result.total_score = 0;
-          }
+    this.changeContent();
+    iseRecorder.onTextChange = function (grade) {
+      if (grade) {
+        console.log(grade);
+        self.result =
+          grade.xml_result &&
+          grade.xml_result.read_word &&
+          grade.xml_result.read_word.rec_paper &&
+          grade.xml_result.read_word.rec_paper.read_word;
+        if (
+          self.result.is_rejected == "true" &&
+          iseRecorder.status === "end"
+        ) {
+          Toast({
+            message: "请正确朗读所示单词",
+          });
+          self.result.total_score = 0;
         }
-      };
-    } else {
-      Toast.fail("初始化语音引擎失败，请刷新重试！");
-      this.support = false;
-    }
+      }
+    };
   },
   destroyed() {
     // iseRecorder = null

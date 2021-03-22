@@ -331,7 +331,7 @@ class IseRecorder {
                 app_id: this.appId,
             },
             business: {
-                category: self.action, // read_syllable/单字朗读，汉语专有 read_word/词语朗读  read_sentence/句子朗读 https://www.xfyun.cn/doc/Ise/IseAPI.html#%E6%8E%A5%E5%8F%A3%E8%B0%83%E7%94%A8%E6%B5%81%E7%A8%8B
+                category: self.action,
                 rstcd: 'utf8',
                 group: 'pupil',
                 sub: 'ise',
