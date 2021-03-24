@@ -13,6 +13,7 @@
     "crypto-js": "^4.0.0",
     "fast-xml-parser": "^3.17.4",
     "vant": "^2.12.6",
+    "vconsole": "^3.4.0",
     "vue": "^2.6.11",
     "vue-router": "^3.5.1",
     "worker-loader": "^3.0.8"

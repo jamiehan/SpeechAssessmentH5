@@ -130,6 +130,7 @@ export default {
             localStorage.setItem("userid", result.data.userid);
             localStorage.setItem("token", result.data.token);
             localStorage.setItem("username", this.name);
+            localStorage.setItem('update', new Date().getTime())
             this.userInfo.name = this.name;
             this.userInfo.userid = result.data.userid;
             setTimeout(() => {
@@ -147,6 +148,11 @@ export default {
     },
   },
   mounted() {
+    const lastUpdate = localStorage.getItem('update') || 0
+    const diff = (new Date().getTime() - lastUpdate) / 1000
+    if(lastUpdate == 0 || diff > 3 * 3600) {
+      localStorage.clear()
+    }
     this.userInfo.name = localStorage.getItem("username") || "";
     this.userInfo.userid = localStorage.getItem("userid") || "";
   },

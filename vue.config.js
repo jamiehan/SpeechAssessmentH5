@@ -8,11 +8,11 @@ module.exports = {
         }
       })
     },
-    parallel: false,
+    parallel: false
     // chainWebpack: config => {
     //   config.output.globalObject('this')
     // }
-    devServer: {
-      proxy: 'http://speech.okstack.com:36080/Portal'
-    }
+    // devServer: {
+    //   proxy: 'http://speech.okstack.com:36080/Portal'
+    // }
   }

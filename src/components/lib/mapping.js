@@ -8,14 +8,14 @@ const stdSymbols = [
     "ə",
     "aɪ",
     "e",
-    "ɜː",
+    // "ɜː",
     "eɪ",
     "ɪ",
     "ɪə",
     "iː",
     "ɒ",
     "əʊ",
-    "ɒɪ",
+    // "ɒɪ",
     "ʊ",
     "uː",
     "ʊə",
@@ -58,14 +58,14 @@ const xfSymbols = [
     "ax",
     "ay",
     "eh",
-    "er",
+    // "er",
     "ey",
     "ih",
     "ir",
     "iy",
     "oo",
     "ow",
-    "oy",
+    // "oy",
     "uh",
     "uw",
     "ur",
@@ -116,7 +116,7 @@ let getXfSymbol = function (std) {
     }
 }
 let getRandomSymbol = function () {
-    const idx = Math.floor(Math.random() * 48)
+    const idx = Math.floor(Math.random() * 46)
     let std = stdSymbols[idx], xf = xfSymbols[idx]
     return {
         std: std,

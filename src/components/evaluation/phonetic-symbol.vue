@@ -15,6 +15,7 @@
       </div>
       <div class="card">
         <div class="symbol">[{{ std }}]</div>
+        <van-image width="268" v-if="xf != ''" :src="'/symbols/' + xf + '.png'" />
       </div>
       <div class="title">
         <div></div>
