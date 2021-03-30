@@ -215,6 +215,9 @@ export default {
     changeContent: function () {
       this.content = this.contents[Math.round(Math.random() * 3)];
     },
+    getParagraph: function(){
+      return this.request.get(`/Management/api/questions/index?questionType=11&page=${this.page}`);
+    }
   },
   mounted() {
     const self = this;

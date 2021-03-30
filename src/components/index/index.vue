@@ -118,7 +118,7 @@ export default {
           Toast("用户名或密码不能为空!");
           done(false);
         } else {
-          const result = await this.request.post("/api/login", {
+          const result = await this.request.post("/Portal/api/login", {
             userName: this.name, //student03,
             password: this.password, //123456
           });

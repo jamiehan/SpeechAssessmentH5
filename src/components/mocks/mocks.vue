@@ -195,7 +195,7 @@ export default {
       }
     },
     postExam(answers) {
-      return this.request.post("/finish-exam-api", {
+      return this.request.post("/Portal/finish-exam-api", {
         examId: this.examInfo.examId,
         token: localStorage.getItem("token"),
         answerSheet: {
@@ -208,7 +208,7 @@ export default {
     },
     async getExamInfo(id) {
       const result = await this.request.get(
-        "/exam-start-api?token=" +
+        "/Portal/exam-start-api?token=" +
           localStorage.getItem("token") +
           "&examId=" +
           id

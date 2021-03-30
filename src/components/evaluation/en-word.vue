@@ -100,6 +100,7 @@ export default {
       word: "banana",
       result: {},
       support: false,
+      page: 1
     };
   },
   computed: {
@@ -179,9 +180,15 @@ export default {
     changeContent: function () {
       iseRecorder.setText("[word]" + this.word);
     },
+    getWord: function(){
+      return this.request.get(`/Management/api/questions/index?questionType=9&page=${this.page}`);
+    }
   },
   mounted() {
     const self = this;
+    this.getWord().then(res=>{
+      console.log(res)
+    })
     this.changeContent();
     iseRecorder.onTextChange = function (grade) {
       if (grade) {

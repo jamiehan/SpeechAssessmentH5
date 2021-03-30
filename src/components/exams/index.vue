@@ -68,7 +68,7 @@ export default {
   methods: {
     async getExams() {
       const result = await this.request.get(
-        "/exam-list-api?token=" + localStorage.getItem("token")
+        "/Portal/exam-list-api?token=" + localStorage.getItem("token")
       );
       if (result.respCode != "200") {
         this.finished = true;
@@ -119,7 +119,7 @@ export default {
     },
     getExamInfo(id) {
       return this.request.get(
-        "/exam-start-api?token=" +
+        "/Portal/exam-start-api?token=" +
           localStorage.getItem("token") +
           "&examId=" +
           id
