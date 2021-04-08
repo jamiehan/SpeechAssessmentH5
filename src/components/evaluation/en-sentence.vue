@@ -14,7 +14,7 @@
         <div>英文句子</div>
       </div>
       <div class="card">
-        <div class="sentence-content">{{ content }}</div>
+        <div class="sentence-content">[ {{ content }} ]</div>
         <div class="words-content"></div>
       </div>
       <div class="title">
@@ -110,7 +110,14 @@
         />
         <div>点击回放</div>
       </div>
-      <div class="btn-next" @click="changeContent">换一个</div>
+            <van-button
+        type="info"
+        class="btn-next"
+        @click="changeContent"
+        :loading="loading"
+        >换一个</van-button
+      >
+      <!-- <div class="btn-next" @click="changeContent">换一个</div> -->
     </div>
     <!-- <div>
       <button @click="start()">开始</button>
@@ -125,7 +132,7 @@
 
 <script>
 import RecorderWrapper from "../lib/recorder/recorder-wrapper";
-import { NavBar, Image as VanImage, Icon, Toast, Popup } from "vant";
+import { NavBar, Image as VanImage, Icon, Toast, Popup, Button } from "vant";
 
 let iseRecorder = new RecorderWrapper({
   action: "read_sentence",
@@ -140,24 +147,23 @@ export default {
     [VanImage.name]: VanImage,
     [Icon.name]: Icon,
     [Popup.name]: Popup,
+    [Button.name]: Button,
+
     // [Dialog.Component.name]: Dialog,
   },
   data() {
     return {
+      loading: false,
       modalName: "",
       // rec: Recorder
       result: {},
       content: "",
       contents: [
-        "How are you today?",
-        "where are you from?",
-        "do you like programming?",
-        "i am chinese",
-        "good idea",
       ],
       show: false,
       support: false,
       words: [],
+      page: 1,
       dpMessages: ["正常", "漏读", "增读", "回读", "替换"], //0正常；16漏读；32增读；64回读；128替换
     };
   },
@@ -183,6 +189,13 @@ export default {
       this.$router.go(-1);
     },
     touchStart: function () {
+      if (this.loading === true) {
+        Toast.loading({
+          message: "正在获取数据，请稍后...",
+          duration: 0,
+        });
+        return;
+      }
       Toast.loading({
         message: "请跟读。。。",
         forbidClick: true,
@@ -209,6 +222,20 @@ export default {
       iseRecorder.stop();
     },
     replay: function () {
+      if (this.loading == true) {
+        Toast.loading({
+          message: "正在获取数据，请稍后...",
+          duration: 1000,
+        });
+        return;
+      }
+      if (iseRecorder.recorder.duration * 1000 <= 0) {
+        Toast.fail({
+          message: "未开始录音或录音时间太短",
+          duration: 1500,
+        });
+        return;
+      }
       Toast.clear(true);
       Toast.loading({
         message: "回放",
@@ -217,11 +244,35 @@ export default {
       iseRecorder.play();
     },
     changeContent: function () {
-      this.content = this.contents[Math.round(Math.random() * 3)];
+      this.loading = true;
+      this.getSentence()
+        .then((res) => {
+          let content;
+          if (typeof res.content === "string") {
+            content = JSON.parse(res.content);
+          }
+          this.content = content.title || "";
+          if (this.content) {
+            this.page += 1;
+          } else {
+            this.page = 1;
+            this.changeContent();
+          }
+          // iseRecorder.setText("[word]" + this.word);
+        })
+        .finally(() => {
+          this.loading = false;
+        });
+      // this.content = this.contents[Math.round(Math.random() * 3)];
     },
-    getSentence: function(){
-      return this.request.get(`/Management/api/questions/index?questionType=10&page=${this.page}`);
-    }
+    getSentence: function () {
+      // 10 句子
+      // 11 段落
+      // 12 对比
+      return this.request.get(
+        `/Management/api/questions/index?questionType=10&page=${this.page}`
+      );
+    },
   },
   async mounted() {
     const self = this;
@@ -258,6 +309,7 @@ export default {
   },
   destroyed() {
     // iseRecorder = null
+    iseRecorder.dispose()
   },
 };
 </script>
@@ -383,11 +435,13 @@ div {
     background-color: #0081ff;
     color: #ffffff;
     right: 16px;
-    top: -32px;
+    top: -52px;
     padding: 2px 4px 2px 12px;
     border-top-left-radius: 2500px;
     border-bottom-left-radius: 2500px;
     font-size: 14px;
+    height: 28px;
+
     // height: 20px;
     // width: 42px;
   }

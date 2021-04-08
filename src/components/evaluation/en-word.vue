@@ -65,7 +65,14 @@
         />
         <div>点击回放</div>
       </div>
-      <div class="btn-next" @click="changeContent">换一个</div>
+      <!-- <div class="btn-next" >换一个</div> -->
+      <van-button
+        type="info"
+        class="btn-next"
+        @click="changeContent"
+        :loading="loading"
+        >换一个</van-button
+      >
     </div>
     <div class="player">
       <audio src="" ref="audioPlayer"></audio>
@@ -74,9 +81,9 @@
 </template>
 
 <script>
-import RecorderWrapper from '../lib/recorder/recorder-wrapper'
+import RecorderWrapper from "../lib/recorder/recorder-wrapper";
 import { getStdSymbol } from "../lib/mapping";
-import { NavBar, Image as VanImage, Icon, Toast } from "vant";
+import { NavBar, Image as VanImage, Icon, Toast, Button } from "vant";
 
 let iseRecorder = new RecorderWrapper({
   action: "read_word",
@@ -90,6 +97,7 @@ export default {
     [NavBar.name]: NavBar,
     [VanImage.name]: VanImage,
     [Icon.name]: Icon,
+    [Button.name]: Button,
     // [Dialog.Component.name]: Dialog,
   },
   data() {
@@ -97,10 +105,11 @@ export default {
       modalName: "",
       msg: "",
       iseRecorder: null,
-      word: "banana",
+      word: "",
       result: {},
       support: false,
-      page: 1
+      page: 1,
+      loading: false,
     };
   },
   computed: {
@@ -149,6 +158,13 @@ export default {
       this.$router.go(-1);
     },
     touchStart: function () {
+      if (this.loading === true) {
+        Toast.loading({
+          message: "正在获取数据，请稍后...",
+          duration: 0,
+        });
+        return;
+      }
       Toast.loading({
         message: "请跟读。。。",
         forbidClick: true,
@@ -156,12 +172,15 @@ export default {
         duration: 0,
       });
       console.log("start recording");
+      iseRecorder.setText("[word]" + this.word);
       iseRecorder.start();
     },
     touchEnd: function () {
       Toast.clear(true);
-      console.log("recording end");
-      iseRecorder.stop();
+      if (this.loading == false) {
+        console.log("recording end");
+        iseRecorder.stop();
+      }
     },
     start: function () {
       iseRecorder.start();
@@ -170,25 +189,56 @@ export default {
       iseRecorder.stop();
     },
     replay: function () {
+      if (this.loading == true) {
+        Toast.loading({
+          message: "正在获取数据，请稍后...",
+          duration: 1000,
+        });
+        return;
+      }
+      if (iseRecorder.recorder.duration * 1000 <= 0) {
+        Toast.fail({
+          message: "未开始录音或录音时间太短",
+          duration: 1500,
+        });
+        return;
+      }
       Toast.clear(true);
       Toast.loading({
         message: "回放",
         duration: iseRecorder.recorder.duration * 1000,
       });
-      iseRecorder.play()
+      iseRecorder.play();
     },
     changeContent: function () {
-      iseRecorder.setText("[word]" + this.word);
+      this.loading = true;
+      this.getWord()
+        .then((res) => {
+          let content;
+          if (typeof res.content === "string") {
+            content = JSON.parse(res.content);
+          }
+          this.word = content.title || "";
+          if (this.word) {
+            this.page += 1;
+          } else {
+            this.page = 1;
+            this.changeContent();
+          }
+        })
+        .finally(() => {
+          this.loading = false;
+        });
     },
-    getWord: function(){
-      return this.request.get(`/Management/api/questions/index?questionType=9&page=${this.page}`);
-    }
+    getWord: function () {
+      // 9 单词
+      return this.request.get(
+        `/Management/api/questions/index?questionType=9&page=${this.page}`
+      );
+    },
   },
   mounted() {
     const self = this;
-    this.getWord().then(res=>{
-      console.log(res)
-    })
     this.changeContent();
     iseRecorder.onTextChange = function (grade) {
       if (grade) {
@@ -198,10 +248,7 @@ export default {
           grade.xml_result.read_word &&
           grade.xml_result.read_word.rec_paper &&
           grade.xml_result.read_word.rec_paper.read_word;
-        if (
-          self.result.is_rejected == "true" &&
-          iseRecorder.status === "end"
-        ) {
+        if (self.result.is_rejected == "true" && iseRecorder.status === "end") {
           Toast({
             message: "请正确朗读所示单词",
           });
@@ -212,6 +259,8 @@ export default {
   },
   destroyed() {
     // iseRecorder = null
+    console.log('destroyed')
+    iseRecorder.dispose()
   },
 };
 </script>
@@ -288,7 +337,7 @@ div {
           justify-content: center;
           min-width: 32px;
         }
-        .syll{
+        .syll {
           margin-left: 2px;
           margin-right: 2px;
         }
@@ -312,11 +361,13 @@ div {
     background-color: #0081ff;
     color: #ffffff;
     right: 16px;
-    top: -32px;
+    top: -52px;
     padding: 2px 4px 2px 12px;
     border-top-left-radius: 2500px;
     border-bottom-left-radius: 2500px;
     font-size: 14px;
+    height: 28px;
+    // line-height: 28px;
     // height: 20px;
     // width: 42px;
   }

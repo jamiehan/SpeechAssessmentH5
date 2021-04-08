@@ -14,7 +14,7 @@
         <div>英文段落</div>
       </div>
       <div class="card">
-        <div class="sentence-content">{{ content }}</div>
+        <div class="sentence-content">[ {{ content }} ]</div>
         <div class="words-content"></div>
       </div>
       <div class="title">
@@ -110,7 +110,14 @@
         />
         <div>点击回放</div>
       </div>
-      <div class="btn-next" @click="changeContent">换一个</div>
+      <van-button
+        type="info"
+        class="btn-next"
+        @click="changeContent"
+        :loading="loading"
+        >换一个</van-button
+      >
+      <!-- <div class="btn-next" @click="changeContent">换一个</div> -->
     </div>
     <audio></audio>
     <!-- <div>
@@ -126,7 +133,7 @@
 
 <script>
 import RecorderWrapper from "../lib/recorder/recorder-wrapper";
-import { NavBar, Image as VanImage, Icon, Toast, Popup } from "vant";
+import { NavBar, Image as VanImage, Icon, Toast, Popup, Button } from "vant";
 
 let recorder = new RecorderWrapper({
   action: "read_chapter",
@@ -140,6 +147,8 @@ export default {
     [VanImage.name]: VanImage,
     [Icon.name]: Icon,
     [Popup.name]: Popup,
+    [Button.name]: Button,
+
     // [Dialog.Component.name]: Dialog,
   },
   data() {
@@ -159,6 +168,8 @@ export default {
       support: false,
       words: [],
       dpMessages: ["正常", "漏读", "增读", "回读", "替换"], //0正常；16漏读；32增读；64回读；128替换
+      loading: false,
+      page: 1,
     };
   },
   computed: {
@@ -183,6 +194,13 @@ export default {
       this.$router.go(-1);
     },
     touchStart: function () {
+      if (this.loading === true) {
+        Toast.loading({
+          message: "正在获取数据，请稍后...",
+          duration: 0,
+        });
+        return;
+      }
       Toast.loading({
         message: "请跟读。。。",
         forbidClick: true,
@@ -205,6 +223,20 @@ export default {
       recorder.stop();
     },
     replay: function () {
+      if (this.loading == true) {
+        Toast.loading({
+          message: "正在获取数据，请稍后...",
+          duration: 1000,
+        });
+        return;
+      }
+      if (recorder.recorder.duration * 1000 <= 0) {
+        Toast.fail({
+          message: "未开始录音或录音时间太短",
+          duration: 1500,
+        });
+        return;
+      }
       Toast.clear(true);
       Toast.loading({
         message: "回放",
@@ -213,11 +245,33 @@ export default {
       recorder.play();
     },
     changeContent: function () {
-      this.content = this.contents[Math.round(Math.random() * 3)];
+      this.loading = true;
+      this.getParagraph()
+        .then((res) => {
+          let content;
+          if (typeof res.content === "string") {
+            content = JSON.parse(res.content);
+          }
+          this.content = content.title || "";
+          if (this.content) {
+            this.page += 1;
+          } else {
+            this.page = 1;
+            this.changeContent();
+          }
+        })
+        .finally(() => {
+          this.loading = false;
+        });
+      // this.content = this.contents[Math.round(Math.random() * 3)];
     },
-    getParagraph: function(){
-      return this.request.get(`/Management/api/questions/index?questionType=11&page=${this.page}`);
-    }
+    getParagraph: function () {
+      // 11 段落
+      // 12 对比
+      return this.request.get(
+        `/Management/api/questions/index?questionType=11&page=${this.page}`
+      );
+    },
   },
   mounted() {
     const self = this;
@@ -388,11 +442,13 @@ div {
     background-color: #0081ff;
     color: #ffffff;
     right: 16px;
-    top: -32px;
+    top: -52px;
     padding: 2px 4px 2px 12px;
     border-top-left-radius: 2500px;
     border-bottom-left-radius: 2500px;
     font-size: 14px;
+    height: 28px;
+
     // height: 20px;
     // width: 42px;
   }

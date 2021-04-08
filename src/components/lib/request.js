@@ -2,7 +2,8 @@ import axios from 'axios'
 const request = axios.create({
     // baseURL: '/Portal',
     // baseURL: 'http://speech.okstack.com:36080/Portal',
-    baseURL: 'http://speech.okstack.com:36080',
+    baseURL: 'https://apis.okstack.com',
+    // baseURL: 'http://localhost:8081',
     timeout: 60000,
     headers: {
         'Content-Type': 'application/json;charset=UTF-8'
