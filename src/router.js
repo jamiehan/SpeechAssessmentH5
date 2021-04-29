@@ -10,9 +10,16 @@ const routes = [
     },
     {
         name: 'index',
-        component: () => import('./components/index/index'),
+        component: () => import('./components/index/newIndex'),
         meta: {
             title: '首页'
+        }
+    },
+    {
+        name: 'gradelist',
+        component: () => import('./components/index/gradeList'),
+        meta: {
+            title: '年级列表'
         }
     },
     {
@@ -108,6 +115,11 @@ router.beforeEach((to, from, next) => {
     }
     next();
 });
+
+const originalPush = Router.prototype.push
+Router.prototype.push = function push(location) {
+    return originalPush.call(this, location).catch(err => err)
+}
 
 export {
     router

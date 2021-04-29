@@ -7,6 +7,9 @@
       @click-left="back"
       fixed
     >
+      <template #right>
+        <van-icon name="orders-o" size="18" @click="showGradeSelect" />
+      </template>
     </van-nav-bar>
     <div class="content" style="padding-left: 12px; padding-right: 12px">
       <div class="title">
@@ -110,7 +113,7 @@
         />
         <div>点击回放</div>
       </div>
-            <van-button
+      <van-button
         type="info"
         class="btn-next"
         @click="changeContent"
@@ -127,12 +130,25 @@
       <audio src="" ref="audioPlayer"></audio>
     </div>
     <van-popup v-model="show">内容</van-popup>
+    <van-action-sheet
+      v-model="showGradeSelector"
+      :actions="actions"
+      @select="selectGrade"
+    />
   </div>
 </template>
 
 <script>
 import RecorderWrapper from "../lib/recorder/recorder-wrapper";
-import { NavBar, Image as VanImage, Icon, Toast, Popup, Button } from "vant";
+import {
+  NavBar,
+  Image as VanImage,
+  Icon,
+  Toast,
+  Popup,
+  Button,
+  ActionSheet,
+} from "vant";
 
 let iseRecorder = new RecorderWrapper({
   action: "read_sentence",
@@ -148,7 +164,7 @@ export default {
     [Icon.name]: Icon,
     [Popup.name]: Popup,
     [Button.name]: Button,
-
+    [ActionSheet.name]: ActionSheet,
     // [Dialog.Component.name]: Dialog,
   },
   data() {
@@ -158,13 +174,16 @@ export default {
       // rec: Recorder
       result: {},
       content: "",
-      contents: [
-      ],
+      contents: [],
       show: false,
       support: false,
       words: [],
       page: 1,
       dpMessages: ["正常", "漏读", "增读", "回读", "替换"], //0正常；16漏读；32增读；64回读；128替换
+      grade: 3,
+      showGradeSelector: false,
+      actions: [{ name: '三年级', value: 3 }, { name: '四年级', value: 4 }, { name: '五年级', value: 5 },
+      { name: '六年级', value: 6 }, { name: '七年级', value: 7 }, { name: '八年级', value: 8 }, { name: '九年级', value: 9 }]
     };
   },
   computed: {
@@ -270,9 +289,17 @@ export default {
       // 11 段落
       // 12 对比
       return this.request.get(
-        `/Management/api/questions/index?questionType=10&page=${this.page}`
+        `/Management/api/questions/index?questionType=10&page=${this.page}&knowledge=${this.grade}`
       );
     },
+    showGradeSelect: function(){
+      this.showGradeSelector = true
+    },
+    selectGrade: function(obj){
+      this.grade = obj.value
+      this.showGradeSelector = false
+      this.changeContent()
+    }
   },
   async mounted() {
     const self = this;
@@ -309,7 +336,7 @@ export default {
   },
   destroyed() {
     // iseRecorder = null
-    iseRecorder.dispose()
+    iseRecorder.dispose();
   },
 };
 </script>

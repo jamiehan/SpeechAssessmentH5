@@ -7,6 +7,9 @@
       @click-left="back"
       fixed
     >
+    <template #right>
+      <van-icon name="orders-o" size="18" @click="showGradeSelect"/>
+    </template>
     </van-nav-bar>
     <div class="content" style="padding-left: 12px; padding-right: 12px">
       <div class="title">
@@ -77,13 +80,14 @@
     <div class="player">
       <audio src="" ref="audioPlayer"></audio>
     </div>
+    <van-action-sheet v-model="showGradeSelector" :actions="actions" @select="selectGrade" />
   </div>
 </template>
 
 <script>
 import RecorderWrapper from "../lib/recorder/recorder-wrapper";
 import { getStdSymbol } from "../lib/mapping";
-import { NavBar, Image as VanImage, Icon, Toast, Button } from "vant";
+import { NavBar, Image as VanImage, Icon, Toast, Button, ActionSheet } from "vant";
 
 let iseRecorder = new RecorderWrapper({
   action: "read_word",
@@ -98,6 +102,7 @@ export default {
     [VanImage.name]: VanImage,
     [Icon.name]: Icon,
     [Button.name]: Button,
+    [ActionSheet.name]: ActionSheet
     // [Dialog.Component.name]: Dialog,
   },
   data() {
@@ -110,6 +115,10 @@ export default {
       support: false,
       page: 1,
       loading: false,
+      grade: 3,
+      showGradeSelector: false,
+      actions: [{ name: '三年级', value: 3 }, { name: '四年级', value: 4 }, { name: '五年级', value: 5 },
+      { name: '六年级', value: 6 }, { name: '七年级', value: 7 }, { name: '八年级', value: 8 }, { name: '九年级', value: 9 }]
     };
   },
   computed: {
@@ -233,11 +242,20 @@ export default {
     getWord: function () {
       // 9 单词
       return this.request.get(
-        `/Management/api/questions/index?questionType=9&page=${this.page}`
+        `/Management/api/questions/index?questionType=9&page=${this.page}&knowledge=${this.grade}`
       );
     },
+    showGradeSelect: function(){
+      this.showGradeSelector = true
+    },
+    selectGrade: function(obj){
+      this.grade = obj.value
+      this.showGradeSelector = false
+      this.changeContent()
+    }
   },
   mounted() {
+    console.log(this.$route.params)
     const self = this;
     this.changeContent();
     iseRecorder.onTextChange = function (grade) {

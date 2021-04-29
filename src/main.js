@@ -9,7 +9,7 @@ import VConsole from 'vconsole'
 Vue.config.productionTip = false
 Vue.prototype.request = request
 
-new VConsole()
+// new VConsole()
 
 new Vue({
   router,
